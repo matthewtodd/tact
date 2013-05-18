@@ -2,8 +2,8 @@ module Tact
   class Things
     attr_reader :inbox
 
-    def initialize
-      @inbox = List.new
+    def initialize(app)
+      @inbox = List.new(app, 'Inbox')
     end
 
     private
@@ -11,16 +11,21 @@ module Tact
     class List
       include Enumerable
 
-      def initialize
-        @contents = []
+      def initialize(app, name)
+        @list = app.lists[name]
       end
 
       def <<(task)
-        @contents << task
+        @list.to_dos.end.make(
+          :new => :to_do,
+          :with_properties => {
+            :name => task
+          }
+        )
       end
 
       def each(&block)
-        @contents.each(&block)
+        @list.to_dos.name.get.each(&block)
       end
     end
   end
