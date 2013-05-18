@@ -1,0 +1,12 @@
+#!/usr/bin/env ruby
+
+require 'tact'
+require 'google/api_client'
+
+# TODO
+# api = ...
+
+google = Tact::Google.new(api)
+things = Tact::Things.new
+
+Tact::Application.new(google, things).run
