@@ -1,5 +1,3 @@
-require 'google/api_client'
-
 module Tact
   class Google
     attr_reader :inbox
@@ -50,8 +48,7 @@ module Tact
       end
 
       def each_task(&block)
-        tasks = call('tasks.tasks.list', 'tasklist' => tasklist_id)
-        tasks.each(&block)
+        call('tasks.tasks.list', 'tasklist' => tasklist_id).each(&block)
       end
 
       def tasklist_id
