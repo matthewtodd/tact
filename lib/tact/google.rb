@@ -31,7 +31,6 @@ module Tact
 
       private
 
-
       def delete_task(task)
         execute @api.tasks.delete,
           'tasklist' => tasklist_id,

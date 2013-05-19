@@ -2,6 +2,10 @@ require 'ostruct'
 require 'securerandom'
 
 class FakeGoogleApi
+ TASKLISTS_LIST = 'tasks.tasklists.list'
+ TASKS_LIST     = 'tasks.tasks.list'
+ TASKS_DELETE   = 'tasks.tasks.delete'
+
   def initialize
     @tasklists = {}
   end
@@ -10,12 +14,12 @@ class FakeGoogleApi
     tasklists.each do |title, items|
       @tasklists[random_id] = OpenStruct.new(
         :title => title,
-        :items => items.map do |title|
+        :items => items.map { |title|
           OpenStruct.new(
             :id => random_id,
             :title => title
           )
-        end
+        }
       )
     end
   end
@@ -23,11 +27,11 @@ class FakeGoogleApi
   def discovered_api(name)
     OpenStruct.new(
       :tasklists => OpenStruct.new(
-        :list => 'tasks.tasklists.list'
+        :list => TASKLISTS_LIST
       ),
       :tasks => OpenStruct.new(
-        :list => 'tasks.tasks.list',
-        :delete => 'tasks.tasks.delete'
+        :list   => TASKS_LIST,
+        :delete => TASKS_DELETE
       )
     )
   end
@@ -37,11 +41,11 @@ class FakeGoogleApi
     parameters = request.fetch(:parameters, {})
 
     data = case api_method
-           when 'tasks.tasklists.list'
+           when TASKLISTS_LIST
              tasklists
-           when 'tasks.tasks.list'
+           when TASKS_LIST
              tasks parameters.fetch('tasklist')
-           when 'tasks.tasks.delete'
+           when TASKS_DELETE
              delete parameters.fetch('tasklist'), parameters.fetch('task')
            else
              raise "Unsupported api_method #{api_method}."
@@ -58,32 +62,30 @@ class FakeGoogleApi
 
   def tasklists
     OpenStruct.new(
-      :items => @tasklists.map do |id, tasklist|
+      :items => @tasklists.map { |id, tasklist|
         OpenStruct.new(
           :id    => id,
           :title => tasklist.title
         )
-      end
+      }
     )
   end
 
   def tasks(tasklist_id)
-    tasklist = @tasklists.fetch(tasklist_id)
-
     OpenStruct.new(
-      :items => tasklist.items.map do |item|
+      :items => @tasklists.fetch(tasklist_id).items.map { |item|
         OpenStruct.new(
           :id    => item.id,
           :title => item.title
         )
-      end
+      }
     )
   end
 
   def delete(tasklist_id, task_id)
-    tasklist = @tasklists.fetch(tasklist_id)
-
-    tasklist.items.delete_if { |item| item.id == task_id }
+    @tasklists.fetch(tasklist_id).items.delete_if { |item|
+      item.id == task_id
+    }
 
     OpenStruct.new
   end

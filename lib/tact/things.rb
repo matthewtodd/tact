@@ -3,7 +3,7 @@ module Tact
     attr_reader :inbox
 
     def initialize(app)
-      @inbox = List.new(app, 'Inbox')
+      @inbox = List.new(app.lists['Inbox'])
     end
 
     private
@@ -11,8 +11,8 @@ module Tact
     class List
       include Enumerable
 
-      def initialize(app, name)
-        @list = app.lists[name]
+      def initialize(list)
+        @list = list
       end
 
       def <<(task)
