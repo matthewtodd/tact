@@ -1,63 +1,75 @@
 module Tact
   class Google
-    attr_reader :inbox
-
-    def initialize(api)
-      @inbox = List.new(api, api.discovered_api('tasks'), 'Inbox')
+    def initialize(client)
+      @client = Client.new(client)
     end
 
-    private
+    def inbox
+      @inbox ||= Tasklist.new(@client, 'Inbox')
+    end
 
-    class List
+    class Tasklist
       include Enumerable
 
-      def initialize(client, api, name)
+      def initialize(client, title)
         @client = client
-        @api = api
-        @name = name
+        @title  = title
       end
 
       def clear
-        each_task do |task|
-          delete_task task
-        end
+        tasks.data.items.each { |task| delete task }
       end
 
       def each
-        each_task do |task|
-          yield task.title
-        end
+        tasks.data.items.each { |task| yield task.title }
       end
 
       private
 
-      def delete_task(task)
-        execute @api.tasks.delete,
-          'tasklist' => tasklist_id,
-          'task'     => task.id
+      def tasklist
+        @tasklist ||= tasklists.data.items.find { |t| t.title == @title }
       end
 
-      def each_task(&block)
-        call(@api.tasks.list, 'tasklist' => tasklist_id).each(&block)
+      def tasklists
+        @client.tasklists
       end
 
-      def tasklist_id
-        @tasklist_id ||= begin
-          tasklists = call(@api.tasklists.list)
-          inbox = tasklists.detect { |list| list.title == @name }
-          inbox.id
-        end
+      def tasks
+        @client.tasks tasklist.id
       end
+
+      def delete(task)
+        @client.delete tasklist.id, task.id
+      end
+    end
+
+    private
+
+    class Client
+      def initialize(client)
+        @client = client
+      end
+
+      def tasklists
+        execute api.tasklists.list
+      end
+
+      def tasks(tasklist_id)
+        execute api.tasks.list, 'tasklist' => tasklist_id
+      end
+
+      def delete(tasklist_id, task_id)
+        execute api.tasks.delete, 'tasklist' => tasklist_id, 'task' => task_id
+      end
+
+      private
 
       def execute(api_method, parameters={})
-        @client.execute(
-          :api_method => api_method,
-          :parameters => parameters
-        )
+        @client.execute :api_method => api_method, :parameters => parameters
       end
 
-      def call(api_method, parameters={})
-        execute(api_method, parameters).data.items
+      def api
+        @api ||= @client.discovered_api('tasks')
       end
     end
   end
