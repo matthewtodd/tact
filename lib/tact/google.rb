@@ -5,7 +5,7 @@ module Tact
     end
 
     def inbox
-      @inbox ||= Tasklist.new(@client, 'Inbox')
+      Tasklist.new(@client, 'Inbox')
     end
 
     class Tasklist
@@ -17,29 +17,29 @@ module Tact
       end
 
       def clear
-        tasks.data.items.each { |task| delete task }
+        tasks.each { |task| delete task }
       end
 
       def each
-        tasks.data.items.each { |task| yield task.title }
+        tasks.each { |task| yield task.title }
       end
 
       private
 
-      def tasklist
-        @tasklist ||= tasklists.data.items.find { |t| t.title == @title }
-      end
-
       def tasklists
-        @client.tasklists
+        @client.tasklists.data.items
       end
 
       def tasks
-        @client.tasks tasklist.id
+        @client.tasks(tasklist.id).data.items
       end
 
       def delete(task)
-        @client.delete tasklist.id, task.id
+        @client.delete(tasklist.id, task.id)
+      end
+
+      def tasklist
+        @tasklist ||= tasklists.find { |t| t.title == @title }
       end
     end
 
