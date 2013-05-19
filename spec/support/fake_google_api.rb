@@ -20,6 +20,18 @@ class FakeGoogleApi
     end
   end
 
+  def discovered_api(name)
+    OpenStruct.new(
+      :tasklists => OpenStruct.new(
+        :list => 'tasks.tasklists.list'
+      ),
+      :tasks => OpenStruct.new(
+        :list => 'tasks.tasks.list',
+        :delete => 'tasks.tasks.delete'
+      )
+    )
+  end
+
   def execute(request)
     api_method = request.fetch(:api_method)
     parameters = request.fetch(:parameters, {})
@@ -45,27 +57,27 @@ class FakeGoogleApi
   end
 
   def tasklists
-    {
-      'items' => @tasklists.map do |id, tasklist|
-        {
-          'id'    => id,
-          'title' => tasklist.title
-        }
+    OpenStruct.new(
+      :items => @tasklists.map do |id, tasklist|
+        OpenStruct.new(
+          :id    => id,
+          :title => tasklist.title
+        )
       end
-    }
+    )
   end
 
   def tasks(tasklist_id)
     tasklist = @tasklists.fetch(tasklist_id)
 
-    {
-      'items' => tasklist.items.map do |item|
-        {
-          'id'    => item.id,
-          'title' => item.title
-        }
+    OpenStruct.new(
+      :items => tasklist.items.map do |item|
+        OpenStruct.new(
+          :id    => item.id,
+          :title => item.title
+        )
       end
-    }
+    )
   end
 
   def delete(tasklist_id, task_id)
@@ -73,6 +85,6 @@ class FakeGoogleApi
 
     tasklist.items.delete_if { |item| item.id == task_id }
 
-    {}
+    OpenStruct.new
   end
 end
