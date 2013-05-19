@@ -1,12 +1,27 @@
 #!/usr/bin/env ruby
 
 require 'tact'
+require 'appscript'
 require 'google/api_client'
+require 'yaml'
 
-# TODO
-# api = ...
+api = Google::APIClient.new(
+  :application_name => 'Tact',
+  :application_version => Tact::VERSION,
+  :authorization => :oauth_2
+)
+
+config = YAML.load(Pathname.new('~/.tactrc').expand_path.read)
+
+api.authorization.scope = 'https://www.googleapis.com/auth/tasks'
+api.authorization.client_id = config.fetch('client_id')
+api.authorization.client_secret = config.fetch('client_secret')
+api.authorization.access_token = config.fetch('access_token')
+api.authorization.refresh_token = config.fetch('refresh_token')
+
+app = Appscript.app('Things')
 
 google = Tact::Google.new(api)
-things = Tact::Things.new
+things = Tact::Things.new(app)
 
 Tact::Application.new(google, things).run
